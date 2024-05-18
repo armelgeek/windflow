@@ -1,36 +1,83 @@
-import crypto from "crypto";
+import { NextRequest, NextResponse } from "next/server";
+import crypto from 'crypto';
+import prisma from '@/lib/prisma';
+const verifySignature = (rawBody, signature, secret) => {
+  const hmac = crypto.createHmac('sha256', secret);
+  const digest = Buffer.from(hmac.update(rawBody).digest('hex'), 'utf8');
+  const signatureBuffer = Buffer.from(signature, 'utf8');
+  return digest.length === signatureBuffer.length && crypto.timingSafeEqual(digest, signatureBuffer);
+};
 
-export async function POST(req) {
-  try {
-    // Catch the event type
-    const clonedReq = req.clone();
-    const eventType = req.headers.get("X-Event-Name");
-    const body = await req.json();
-
-    // Check signature
-    const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SIGNATURE;
-    const hmac = crypto.createHmac("sha256", secret);
-    const digest = Buffer.from(
-      hmac.update(await clonedReq.text()).digest("hex"),
-      "utf8"
-    );
-    const signature = Buffer.from(req.headers.get("X-Signature") || "", "utf8");
-
-    if (!crypto.timingSafeEqual(digest, signature)) {
-      throw new Error("Invalid signature.");
-    }
-
-    console.log(body);
-
-    // Logic according to event
-    if (eventType === "order_created") {
-      const userId = body.meta.custom_data.user_id;
-      const isSuccessful = body.data.attributes.status === "paid";
-    }
-
-    return Response.json({ message: "Webhook received" });
-  } catch (err) {
-    console.error(err);
-    return Response.json({ message: "Server error" }, { status: 500 });
+export const POST = async (req) => {
+  if (req.method !== 'POST') {
+    return new Response('Method Not Allowed', { status: 405 });
   }
-}
+
+  try {
+    const rawBody = await req.text();
+    const signature = req.headers.get('x-signature')|| '';
+    const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET || 'thisissecrethook';
+    console.log('secret',secret);
+    if (!verifySignature(rawBody, signature, secret)) {
+      return new Response('Invalid signature', { status: 401 });
+    }
+
+    const payload = JSON.parse(rawBody);
+    const eventName = payload.meta.event_name;
+    const lemonSqueezyId = parseInt(payload.data.id);
+
+    let variant_id, userId, customerId, subscriptionData;
+
+    if (eventName === 'subscription_created' || eventName === 'subscription_updated' || eventName === 'subscription_cancelled') {
+      subscriptionData = payload.data.attributes;
+      userId = payload.meta.custom_data ? payload.meta.custom_data.user_id.toString() : null;
+      customerId = subscriptionData.customer_id;
+      variant_id = subscriptionData.first_subscription_item ? subscriptionData.variant_id : null;
+    }
+
+    switch (eventName) {
+      case 'subscription_created':
+      case 'subscription_updated':
+        await prisma.subscription.upsert({
+          where: { lemonSqueezyId: lemonSqueezyId },
+          update: {
+            status: subscriptionData.status,
+            renewsAt: subscriptionData.renews_at ? new Date(subscriptionData.renews_at) : null,
+            endsAt: subscriptionData.ends_at ? new Date(subscriptionData.ends_at) : null,
+            trialEndsAt: subscriptionData.trial_ends_at ? new Date(subscriptionData.trial_ends_at) : null,
+            userId: userId,
+            customerId: customerId,
+          },
+          create: {
+            lemonSqueezyId: lemonSqueezyId,
+            customerId: customerId,
+            orderId: subscriptionData.order_id,
+            name: subscriptionData.product_name,
+            email: subscriptionData.user_email,
+            status: subscriptionData.status,
+            renewsAt: subscriptionData.renews_at ? new Date(subscriptionData.renews_at) : null,
+            endsAt: subscriptionData.ends_at ? new Date(subscriptionData.ends_at) : null,
+            trialEndsAt: subscriptionData.trial_ends_at ? new Date(subscriptionData.trial_ends_at) : null,
+            user: {
+              connect: { id: userId },
+            },
+          },
+        });
+        break;
+      case 'subscription_cancelled':
+        await prisma.subscription.update({
+          where: { lemonSqueezyId: lemonSqueezyId },
+          data: { status: 'cancelled', endsAt: new Date() }, 
+          // Update with actual cancellation logic
+        });
+        break;
+      default:
+        throw new Error(`Unhandled event: ${eventName}`);
+    }
+
+    return new Response('Webhook processed successfully', { status: 200 });
+  } catch (error) {
+    console.error('Error processing webhook:', error);
+    return new Response('Internal Server Error', { status: 500 });
+  }
+};

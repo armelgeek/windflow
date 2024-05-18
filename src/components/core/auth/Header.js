@@ -25,7 +25,7 @@ export default async function Header() {
 
     return (
         <header className="fixed top-0 z-40 flex w-full transition-all border-b border-border/15 backdrop-blur-xl bg-background/60">
-            <div className="container px-10  flex items-center justify-between h-14 max-w-screen-2xl">
+            <div className="container px-20  flex items-center justify-between h-14">
                 <nav className="flex items-center gap-3 text-sm md:gap-6">
                     <Link
                         href="/"
@@ -33,8 +33,14 @@ export default async function Header() {
                         title="Boilerplate - Next.js SaaS Boilerplate"
                     >
                         <span className={`${poppins.className}`}>
-                            <b className="text-gray-800">Boilerplate</b>
+                            <h3 className="text-gray-800">Boilerplate</h3>
                         </span>
+                    </Link>
+                    <Link
+                        href="/pricing"
+                        className="transition-colors hover:text-foreground/80 text-foreground/60"
+                    >
+                        Pricing
                     </Link>
                 </nav>
                 <div className="relative flex items-center justify-between gap-2 space-x-2 text-sm md:justify-end">
