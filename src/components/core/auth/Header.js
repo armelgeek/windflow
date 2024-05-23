@@ -17,7 +17,7 @@ import {
 import { UserRound, UserRoundCog } from "lucide-react";
 
 // Utils
-import { poppins } from "@/lib/utils/fonts";
+import { syne } from "@/lib/utils/fonts";
 import { getInitials } from "@/lib/utils/initials";
 
 export default async function Header() {
@@ -32,13 +32,13 @@ export default async function Header() {
                         className="flex items-center"
                         title="Boilerplate - Next.js SaaS Boilerplate"
                     >
-                        <span className={`${poppins.className}`}>
+                        <span className={`${syne.className}`}>
                             <h3 className="text-gray-800">Boilerplate</h3>
                         </span>
                     </Link>
                     <Link
                         href="/pricing"
-                        className="transition-colors hover:text-foreground/80 text-foreground/60"
+                        className={`${syne.className} transition-colors hover:text-foreground/80 text-foreground/60`}
                     >
                         Pricing
                     </Link>
@@ -48,7 +48,7 @@ export default async function Header() {
                     {!session && (
                         <>
                             <Button asChild size="sm">
-                                <Link href="/signin" className="m-0">
+                                <Link href="/signin" className={`${syne.className} m-0`}>
                                     Get started
                                 </Link>
                             </Button>
@@ -86,13 +86,7 @@ export default async function Header() {
                                         </span>
                                     </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    <Link href={`/users/${session.user.id}`}>
-                                        <span className="flex items-center gap-1">
-                                            <UserRound className="h-4" /> Profile
-                                        </span>
-                                    </Link>
-                                </DropdownMenuItem>
+
                                 <DropdownMenuSeparator />
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem>

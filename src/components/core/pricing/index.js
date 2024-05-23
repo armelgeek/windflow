@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import PlanButton from './PlanButton';
 import { LemonSquezzyLoad } from './LemonSquezzyLoad';
+import { syne } from '@/lib/utils/fonts';
 
 const plans = [
     { id: "371582", title: 'Windflow Monthly', price: '9.99/month', description: 'Super description', features: ['1 Workspace', 'Unlimited Public Projects', 'Community Access'] },
@@ -21,34 +22,37 @@ const Plans = async () => {
         user = await getUserById(session.user.id);
     }
     const userSubscriptions = user && user.user ? user.user.subscriptions : [];
+    const isCurrentPlan=(title) => userSubscriptions[0].name === title;
+
     return (
         <div className="flex flex-col items-start justify-center max-w-4xl gap-6 mx-auto md:flex-row">
             {plans.map(plan => (
                 <Card
-                    className="flex-1 w-full"
+                    className="flex-1 w-[150px]"
                     key={plan.id}
                     data-productid={plan.id}
                     data-variantid={plan.id}
                 >
                     <CardHeader>
-                        <CardTitle>{plan.title}</CardTitle>
+                        <CardTitle className={`${syne.className}`}>{plan.title}</CardTitle>
                         <div
+                            className={`${syne.className}`}
                             dangerouslySetInnerHTML={{
                                 __html: plan.description,
                             }}
                         />
                     </CardHeader>
                     <CardContent className="flex flex-col gap-4">
-                        <div className="text-2xl font-bold">
+                        <div className={`${syne.className} text-2xl font-bold`}>
                             ${plan.price}
                         </div>
                         <ul className="space-y-2 list-disc list-inside">
                             {plan.features.map((feature, index) => (
-                                <li key={index}>{feature}</li>
+                                <li key={index} className={`${syne.className}`}>{feature}</li>
                             ))}
                         </ul>
                         {userSubscriptions.length > 0 ? (
-                            <Button>Manage Subscription</Button>
+                            <Button  className={`${syne.className}`} disabled={isCurrentPlan(plan.title)}>{isCurrentPlan(plan.title) ? 'Current Plan': 'Switch Plan'}</Button>
                         ) : (
                             <PlanButton plan={plan} />
                         )}

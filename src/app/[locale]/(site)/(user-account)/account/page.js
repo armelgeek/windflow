@@ -42,7 +42,7 @@ export default async function AccountPage() {
           </CardHeader>
         </Card>
       </Section>
-      <UserSubscription/>
+
 
       <Section size="sm">
         <Card>

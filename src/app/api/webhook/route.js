@@ -28,7 +28,12 @@ export const POST = async (req) => {
 
     let variant_id, userId, customerId, subscriptionData;
 
-    if (eventName === 'subscription_created' || eventName === 'subscription_updated' || eventName === 'subscription_cancelled') {
+    if (eventName === 'subscription_created' ||
+        eventName === 'subscription_updated' ||
+        eventName === 'subscription_cancelled' ||
+        eventName === 'subscription_resumed' ||
+        eventName === 'subscription_expired'
+    ) {
       subscriptionData = payload.data.attributes;
       userId = payload.meta.custom_data ? payload.meta.custom_data.user_id.toString() : null;
       customerId = subscriptionData.customer_id;
@@ -67,7 +72,21 @@ export const POST = async (req) => {
       case 'subscription_cancelled':
         await prisma.subscription.update({
           where: { lemonSqueezyId: lemonSqueezyId },
-          data: { status: 'cancelled', endsAt: new Date() }, 
+          data: { status: 'cancelled', endsAt: new Date() },
+          // Update with actual cancellation logic
+        });
+        break;
+      case 'subscription_resumed':
+        await prisma.subscription.update({
+          where: { lemonSqueezyId: lemonSqueezyId },
+          data: { status: 'active', endsAt: null },
+          // Update with actual cancellation logic
+        });
+        break;
+      case 'subscription_expired':
+        await prisma.subscription.update({
+          where: { lemonSqueezyId: lemonSqueezyId },
+          data: { status: 'expired', renewsAt: null },
           // Update with actual cancellation logic
         });
         break;

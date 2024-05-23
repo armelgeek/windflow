@@ -1,9 +1,9 @@
-import { Poppins } from "next/font/google";
+import { Syne } from "next/font/google";
 
-const poppins = Poppins({
-  weight: ["500", "600", "700"],
+const syne = Syne({
+  weight: ["500", "600", "700","800"],
   subsets: ["latin-ext"],
-  variable: "--font-poppins",
+  variable: "--font-syne",
 });
 
-export { poppins }
+export { syne }
