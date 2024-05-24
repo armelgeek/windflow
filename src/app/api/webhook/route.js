@@ -15,9 +15,9 @@ export const POST = async (req) => {
 
   try {
     const rawBody = await req.text();
-    const signature = req.headers.get('x-signature')|| '';
+    const signature = req.headers.get('x-signature') || '';
     const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET || 'thisissecrethook';
-    console.log('secret',secret);
+    console.log('secret', secret);
     if (!verifySignature(rawBody, signature, secret)) {
       return new Response('Invalid signature', { status: 401 });
     }
@@ -29,15 +29,16 @@ export const POST = async (req) => {
     let variant_id, userId, customerId, subscriptionData;
 
     if (eventName === 'subscription_created' ||
-        eventName === 'subscription_updated' ||
-        eventName === 'subscription_cancelled' ||
-        eventName === 'subscription_resumed' ||
-        eventName === 'subscription_expired'
+      eventName === 'subscription_updated' ||
+      eventName === 'subscription_cancelled' ||
+      eventName === 'subscription_resumed' ||
+      eventName === 'subscription_expired' ||
+      eventName === 'subscription_plan_changed'
     ) {
       subscriptionData = payload.data.attributes;
       userId = payload.meta.custom_data ? payload.meta.custom_data.user_id.toString() : null;
       customerId = subscriptionData.customer_id;
-      variant_id = subscriptionData.first_subscription_item ? subscriptionData.variant_id : null;
+      // variant_id = subscriptionData.first_subscription_item ? subscriptionData.variant_id : null;
     }
 
     switch (eventName) {
@@ -88,6 +89,22 @@ export const POST = async (req) => {
           where: { lemonSqueezyId: lemonSqueezyId },
           data: { status: 'expired', renewsAt: null },
           // Update with actual cancellation logic
+        });
+        break;
+      case 'subscription_plan_changed':
+        await prisma.subscription.update({
+          where: { userId: userId },
+          data: {
+            lemonSqueezyId: lemonSqueezyId,
+            customerId: customerId,
+            orderId: subscriptionData.order_id,
+            name: subscriptionData.product_name,
+            email: subscriptionData.user_email,
+            status: subscriptionData.status,
+            renewsAt: subscriptionData.renews_at ? new Date(subscriptionData.renews_at) : null,
+            endsAt: subscriptionData.ends_at ? new Date(subscriptionData.ends_at) : null,
+            trialEndsAt: subscriptionData.trial_ends_at ? new Date(subscriptionData.trial_ends_at) : null,
+          },
         });
         break;
       default:
