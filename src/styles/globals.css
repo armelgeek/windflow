@@ -46,3 +46,6 @@
       @apply bg-background text-foreground;
     }
   }
+  iframe {
+    width: 100%;
+  }

@@ -46,7 +46,7 @@ export default async function SettingPage() {
             },
         });
 
-        revalidatePath("/", "layout");
+        revalidatePath("/");
     }
 
     return (

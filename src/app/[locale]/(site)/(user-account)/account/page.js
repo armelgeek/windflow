@@ -32,39 +32,7 @@ export default async function AccountPage() {
 
   return (
     <div className="container  py-20">
-      <Section size="sm">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your account</CardTitle>
-            <CardDescription>
-              <code className="text-xs">{session?.user?.id}</code>
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </Section>
-
-
-      <Section size="sm">
-        <Card>
-          <CardHeader>
-            <CardTitle>Edit information</CardTitle>
-            <CardDescription>{session?.user?.email}</CardDescription>
-          </CardHeader>
-          <CardContent>
-          </CardContent>
-        </Card>
-      </Section>
-
-      <Section size="sm">
-        <Card>
-          <CardHeader>
-            <CardTitle>Danger zone</CardTitle>
-            <CardDescription>Be careful here</CardDescription>
-          </CardHeader>
-          <CardContent>
-          </CardContent>
-        </Card>
-      </Section>
+      
     </div>
   );
 }

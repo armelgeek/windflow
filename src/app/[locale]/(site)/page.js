@@ -1,12 +1,35 @@
-"use client";
+import {Preview} from '@/components/core/general/Preview';
+import fs from 'fs';
+import path from 'path';
 
-import axios from "axios";
-import Image from "next/image";
+export const getFilesRecursively = (directory) => {
+  const entries = fs.readdirSync(directory, { withFileTypes: true });
+  const files = entries.map(entry => {
+    const fullPath = path.join(directory, entry.name);
+    return entry.isDirectory() ? getFilesRecursively(fullPath) : fullPath;
+  });
+  return Array.prototype.concat(...files);
+};
+export async function generateStaticPaths() {
+  const staticPath = path.join(process.cwd(), '.next/static');
+  console.log('relativePaths',staticPath);
+  const chunkFiles = getFilesRecursively(path.join(staticPath, 'chunks'));
 
-export default function Home() {
+  const cssFiles = getFilesRecursively(path.join(staticPath, 'css'));
+ // console.log('chunkFiles',cssFiles);
+  const allFiles = [...chunkFiles, ...cssFiles];
+  const relativePaths = allFiles.map(file => file.replace(process.cwd(), '').replace('.next', '_next'));
+
+  return relativePaths.filter(file => file.endsWith('.css'));
+}
+
+export default async function Page() {
+ const cssFilesOnly = await generateStaticPaths();
+  const cssLinks = cssFilesOnly.map(file => `<link rel="stylesheet" href="${file}" /> \n`).join('');
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-        <h3>Hello world Lemon squezzy</h3>
-    </main>
+    <>
+      <Preview cssLinks={cssLinks} />
+    </>
   );
 }
